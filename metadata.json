@@ -1,0 +1,6 @@
+{
+  "name": "Trung Tâm Cấp Cứu",
+  "description": "Trò chơi nhập vai bác sĩ cấp cứu bệnh viện theo chuẩn Bộ Y Tế Việt Nam",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
