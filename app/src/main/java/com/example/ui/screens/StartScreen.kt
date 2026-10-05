@@ -133,7 +133,7 @@ fun StartScreen(
                                 )
                             }
                             Text(
-                                text = "BƯỚC ${savedShift.stepIndex}/5",
+                                text = "BƯỚC ${savedShift.stepIndex}/6",
                                 fontSize = 11.sp,
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
@@ -266,37 +266,7 @@ fun StartScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // SLEEK 3-STAT CAREER HUD
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                QuickStatCard(
-                    title = "Ca tiếp nhận",
-                    value = "$patientsTreated",
-                    icon = Icons.Default.Person,
-                    color = Spo2Cyan,
-                    modifier = Modifier.weight(1f)
-                )
-                QuickStatCard(
-                    title = "Cứu sống",
-                    value = "$patientsSaved",
-                    icon = Icons.Default.Favorite,
-                    color = EcgGreen,
-                    modifier = Modifier.weight(1f)
-                )
-                QuickStatCard(
-                    title = "Điểm uy tín",
-                    value = "$reputationScore",
-                    icon = Icons.Default.Star,
-                    color = Color(0xFFFEF08A),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // COMPACT DISCLAIMER
             Text(
@@ -415,43 +385,3 @@ fun StartScreen(
     }
 }
 
-@Composable
-private fun QuickStatCard(
-    title: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = DarkSurface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle.copy(alpha = 0.5f))
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
-            )
-            Text(
-                text = title,
-                fontSize = 9.sp,
-                color = TextSecondary,
-                maxLines = 1
-            )
-        }
-    }
-}

@@ -12,17 +12,17 @@
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M48,32 L60,32 L60,48 L76,48 L76,60 L60,60 L60,76 L48,76 L48,60 L32,60 L32,48 L48,48 Z" />
-    <!-- Electric ECG pulse wave cutting across in vibrant emerald green -->
+    <!-- Electric ECG pulse wave cutting across in medical blue -->
     <path
         android:pathData="M26,54 L44,54 L48,42 L52,66 L56,48 L60,57 L64,54 L82,54"
         android:strokeWidth="3.2"
-        android:strokeColor="#0D9488"
+        android:strokeColor="#1D4ED8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
     <path
         android:pathData="M26,54 L44,54 L48,42 L52,66 L56,48 L60,57 L64,54 L82,54"
         android:strokeWidth="1.6"
-        android:strokeColor="#10B981"
+        android:strokeColor="#60A5FA"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>

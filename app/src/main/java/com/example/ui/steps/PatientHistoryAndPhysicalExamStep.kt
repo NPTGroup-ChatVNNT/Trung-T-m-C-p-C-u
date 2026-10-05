@@ -1,5 +1,6 @@
 package com.example.ui.steps
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,8 +38,9 @@ fun PatientHistoryAndPhysicalExamStep(
     onProceedToNextStep: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var activeSubTab by remember { mutableStateOf(0) } // 0 = Hỏi bệnh sử AI, 1 = Khám 6 hệ cơ quan
+    var activeSubTab by remember { mutableStateOf(0) } // 0 = Hỏi bệnh sử, 1 = Khám thực thể
     var inputQuestion by remember { mutableStateOf("") }
+    var isTriageExpanded by remember { mutableStateOf(true) }
 
     val quickQuestions = remember(patientCase) {
         listOf(
@@ -53,12 +56,14 @@ fun PatientHistoryAndPhysicalExamStep(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
-        // AUTOMATIC TRIAGE & GENERAL STATUS CARD (TỰ ĐỘNG ĐÁNH GIÁ TOÀN TRẠNG)
+        // MỤC LỚN 1: ĐÁNH GIÁ TOÀN TRẠNG LÚC NHẬP VIỆN (CÓ THỂ THU GỌN / MỞ RỘNG)
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isTriageExpanded = !isTriageExpanded },
+            shape = RoundedCornerShape(10.dp),
             colors = CardDefaults.cardColors(containerColor = DarkSurface),
             border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
         ) {
@@ -77,41 +82,55 @@ fun PatientHistoryAndPhysicalExamStep(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "ĐÁNH GIÁ TOÀN TRẠNG LÚC NHẬP VIỆN (TỰ ĐỘNG)",
+                            text = "ĐÁNH GIÁ TOÀN TRẠNG NHẬP VIỆN",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                     }
-                    Text(
-                        text = patientCase.arrivalTime,
-                        fontSize = 11.sp,
-                        color = TextSecondary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = patientCase.arrivalTime,
+                            fontSize = 10.sp,
+                            color = TextSecondary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = if (isTriageExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "• Toàn trạng: ${patientCase.chiefComplaint}",
-                    fontSize = 11.sp,
-                    color = Color(0xFFFEF08A)
-                )
-                Text(
-                    text = "• Đường thở: ${patientCase.abcde.airwayDesc}",
-                    fontSize = 11.sp,
-                    color = TextSecondary
-                )
-                Text(
-                    text = "• Tuần hoàn & Tri giác: GCS ${patientCase.initialVitals.gcs}/15 • Huyết áp ${patientCase.initialVitals.bpSys}/${patientCase.initialVitals.bpDia} mmHg • SpO2 ${patientCase.initialVitals.spo2}%",
-                    fontSize = 11.sp,
-                    color = TextSecondary
-                )
+                AnimatedVisibility(visible = isTriageExpanded) {
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        Text(
+                            text = "• Lý do vào viện: ${patientCase.chiefComplaint}",
+                            fontSize = 11.sp,
+                            color = Color(0xFFFEF08A)
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "• Tình trạng đường thở: ${patientCase.abcde.airwayDesc}",
+                            fontSize = 11.sp,
+                            color = TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "• Sinh hiệu: GCS ${patientCase.initialVitals.gcs}/15 • HA ${patientCase.initialVitals.bpSys}/${patientCase.initialVitals.bpDia} mmHg • SpO2 ${patientCase.initialVitals.spo2}% • Mạch ${patientCase.initialVitals.heartRate} l/p",
+                            fontSize = 11.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // TAB SWITCHER
+        // MỤC LỚN 2: CHUYỂN ĐỔI GỌN GÀNG GIỮA HỎI BỆNH & KHÁM THỰC THỂ
         TabRow(
             selectedTabIndex = activeSubTab,
             containerColor = DarkSurface,
@@ -123,10 +142,15 @@ fun PatientHistoryAndPhysicalExamStep(
                 onClick = { activeSubTab = 0 },
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Forum, contentDescription = null, tint = if (activeSubTab == 0) Spo2Cyan else TextSecondary, modifier = Modifier.size(16.dp))
+                        Icon(
+                            Icons.Default.Forum,
+                            contentDescription = null,
+                            tint = if (activeSubTab == 0) Spo2Cyan else TextSecondary,
+                            modifier = Modifier.size(15.dp)
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Hỏi Bệnh Sử Tương Tác AI",
+                            text = "Hỏi Bệnh Sử",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -138,7 +162,12 @@ fun PatientHistoryAndPhysicalExamStep(
                 onClick = { activeSubTab = 1 },
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.MedicalInformation, contentDescription = null, tint = if (activeSubTab == 1) MedicalPrimaryLight else TextSecondary, modifier = Modifier.size(16.dp))
+                        Icon(
+                            Icons.Default.MedicalInformation,
+                            contentDescription = null,
+                            tint = if (activeSubTab == 1) MedicalPrimaryLight else TextSecondary,
+                            modifier = Modifier.size(15.dp)
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Khám 6 Hệ Cơ Quan (${examinedSystems.size}/6)",
@@ -150,20 +179,20 @@ fun PatientHistoryAndPhysicalExamStep(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         if (activeSubTab == 0) {
-            // TAB 0: INTERACTIVE PATIENT AI CHAT
+            // PHẦN 1: HỎI BỆNH SỬ TƯƠNG TÁC
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 280.dp)
+                    .heightIn(min = 260.dp)
             ) {
-                // Chat history bubble list
+                // Khung hội thoại
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(200.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF090D18)),
                     border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
@@ -211,7 +240,9 @@ fun PatientHistoryAndPhysicalExamStep(
                         if (chatMessages.isEmpty()) {
                             item {
                                 Box(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -239,9 +270,9 @@ fun PatientHistoryAndPhysicalExamStep(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Quick Suggestion Chips
+                // Gợi ý câu hỏi lâm sàng nhanh
                 Text(
-                    text = "Gợi ý câu hỏi lâm sàng nhanh:",
+                    text = "Gợi ý câu hỏi lâm sàng:",
                     fontSize = 10.sp,
                     color = TextSecondary
                 )
@@ -257,7 +288,7 @@ fun PatientHistoryAndPhysicalExamStep(
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(DarkSurfaceVariant)
                                 .clickable { onSendDoctorQuestion(chip) }
-                                .padding(horizontal = 6.dp, vertical = 4.dp)
+                                .padding(horizontal = 6.dp, vertical = 6.dp)
                         ) {
                             Text(text = chip, fontSize = 10.sp, color = TextPrimary, maxLines = 1)
                         }
@@ -266,7 +297,7 @@ fun PatientHistoryAndPhysicalExamStep(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Custom Question Input Bar
+                // Ô nhập câu hỏi: Yêu cầu "Hỏi bệnh nhân.."
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -274,11 +305,12 @@ fun PatientHistoryAndPhysicalExamStep(
                     OutlinedTextField(
                         value = inputQuestion,
                         onValueChange = { inputQuestion = it },
-                        placeholder = { Text("Gõ bất kỳ câu hỏi nào cho bệnh nhân...", fontSize = 11.sp, color = TextSecondary) },
+                        placeholder = { Text("Hỏi bệnh nhân...", fontSize = 12.sp, color = TextSecondary) },
                         singleLine = true,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
+                            .height(48.dp)
+                            .testTag("input_patient_question"),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Spo2Cyan,
                             unfocusedBorderColor = BorderSubtle,
@@ -298,13 +330,15 @@ fun PatientHistoryAndPhysicalExamStep(
                             .size(46.dp)
                             .clip(CircleShape)
                             .background(Spo2Cyan)
+                            .testTag("btn_send_patient_question")
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Gửi", tint = Color.Black, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Gửi", tint = Color.Black, modifier = Modifier.size(18.dp))
                     }
                 }
             }
         } else {
-            // TAB 1: 6 Organ Systems Physical Exam
+            // PHẦN 2: KHÁM THỰC THỂ 6 HỆ CƠ QUAN
+            // Bác sĩ tự đọc triệu chứng và chẩn đoán - KHÔNG hiển thị BẤT THƯỜNG / BÌNH THƯỜNG
             patientCase.physicalExams.forEach { item ->
                 val isExamined = item.systemKey in examinedSystems
                 val icon = when (item.systemKey) {
@@ -320,14 +354,15 @@ fun PatientHistoryAndPhysicalExamStep(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 3.dp)
-                        .clickable { onExamSystem(item.systemKey) },
+                        .clickable { onExamSystem(item.systemKey) }
+                        .testTag("exam_${item.systemKey}"),
                     shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (isExamined) DarkSurfaceVariant else DarkSurface
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (isExamined) if (item.isAbnormal) MedicalRed else EcgGreen else BorderSubtle
+                        if (isExamined) ScrubTealLight.copy(alpha = 0.6f) else BorderSubtle
                     )
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
@@ -340,7 +375,7 @@ fun PatientHistoryAndPhysicalExamStep(
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = null,
-                                    tint = if (isExamined) if (item.isAbnormal) MedicalRedLight else EcgGreen else TextSecondary,
+                                    tint = if (isExamined) Spo2Cyan else TextSecondary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -360,17 +395,22 @@ fun PatientHistoryAndPhysicalExamStep(
                                     Text("Khám ngay", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             } else {
-                                Text(
-                                    text = if (item.isAbnormal) "BẤT THƯỜNG" else "BÌNH THƯỜNG",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (item.isAbnormal) MedicalRedLight else EcgGreen
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = ScrubTealLight, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "Đã khám",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = ScrubTealLight
+                                    )
+                                }
                             }
                         }
 
                         if (isExamined) {
                             Spacer(modifier = Modifier.height(4.dp))
+                            // Triệu chứng khách quan - Bác sĩ tự đọc và phân tích
                             Text(
                                 text = item.finding,
                                 fontSize = 11.sp,
@@ -383,14 +423,15 @@ fun PatientHistoryAndPhysicalExamStep(
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Proceed to Step 2 (Cận lâm sàng)
+        // Nút chuyển tiếp gọn gàng - Loại bỏ chỉ mục "bước 2"
         Button(
             onClick = onProceedToNextStep,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .height(50.dp)
+                .testTag("btn_proceed_to_labs"),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MedicalPrimary,
@@ -398,7 +439,7 @@ fun PatientHistoryAndPhysicalExamStep(
             )
         ) {
             Text(
-                text = "CHUYỂN SANG BƯỚC 2: CHỈ ĐỊNH CẬN LÂM SÀNG",
+                text = "TIẾP TỤC: CẬN LÂM SÀNG",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
             )

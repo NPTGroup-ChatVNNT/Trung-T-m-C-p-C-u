@@ -27,7 +27,20 @@ object EmergencyCaseDatabase {
                 urinalysisResult = uri
             )
         }
-        return criticalCases + internalCases
+        val traumaCases = TraumaAndToxicologyCases.getNewCases { ecg, ecgCrit, trop, tropCrit, abg, abgCrit, lac, lacCrit, cbc, cbcCrit, bs, xrChest, xrAbd, uri ->
+            createBaseLabList(
+                ecgResult = ecg, ecgCritical = ecgCrit,
+                tropResult = trop, tropCritical = tropCrit,
+                abgResult = abg, abgCritical = abgCrit,
+                lactateResult = lac, lactateCritical = lacCrit,
+                cbcResult = cbc, cbcCritical = cbcCrit,
+                bloodSugarResult = bs,
+                xrayChestResult = xrChest,
+                xrayAbdResult = xrAbd,
+                urinalysisResult = uri
+            )
+        }
+        return criticalCases + internalCases + traumaCases
     }
 
     // ==========================================
@@ -166,9 +179,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Da lạnh ẩm, vã mồ hôi nhiều, không phát ban mề đay, không có dấu hiệu chấn thương ngực.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Nhồi máu cơ tim cấp ST chênh lên thành trước rộng giờ thứ 2 - Killip II - Biến chứng Rung thất (STEMI Anterior)",
-            diagnosisKeywords = listOf("nhoi mau co tim", "stemi", "st chenh len", "thanh truoc", "rung that", "killip"),
-            goldenDifferentials = listOf("Phình bóc tách động mạch chủ ngực cấp", "Thuyên tắc động mạch phổi cấp", "Viêm màng ngoài tim cấp", "Tràn khí màng phổi tự phát"),
+            goldenDiagnosis = "[I21.0] Nhồi máu cơ tim cấp STEMI thành trước rộng - Biến chứng Rung thất [I49.0] (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("i21", "nhoi mau co tim", "stemi", "st chenh len", "thanh truoc", "rung that", "killip"),
+            goldenDifferentials = listOf("Phình bóc tách động mạch chủ ngực cấp [I71.0]", "Thuyên tắc động mạch phổi cấp [I26.0]", "Viêm màng ngoài tim cấp", "Tràn khí màng phổi tự phát [J93.0]"),
             goldenClinicalReasoning = "Bệnh nhân nam 58 tuổi, yếu tố nguy cơ tim mạch cao. Nhập viện vì cơn đau thắt ngực điển hình kiểu động mạch vành kéo dài > 30 phút, vã mồ hôi, rale ẩm đáy phổi. ECG 12 chuyển đạo có ST chênh lên vòm dạng bia mộ ở V1-V6 kèm Troponin I tăng cao xác nhận STEMI thành trước rộng.",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do chậm trễ không sốc điện khử rung kịp thời khi monitor chuyển sang Rung thất (VF), tưới máu não ngưng trệ hoàn toàn! Bệnh nhân mất tri giác, tim ngừng đập chuyển thành vô tâm thu (Asystole).",
@@ -284,9 +297,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Bầm tím diện tích 8x5cm vùng liên sườn IV-V bên phải, tràn khí dưới da nhẹ.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Tràn khí màng phổi áp lực bên phải cấp tính sau chấn thương ngực kín (Tension Pneumothorax)",
-            diagnosisKeywords = listOf("tran khi mang phoi", "ap luc", "tension pneumothorax", "phoi phai", "chan thuong nguc"),
-            goldenDifferentials = listOf("Chèn ép tim cấp (Cardiac Tamponade)", "Tràn máu màng phổi lượng lớn", "Thủng vỡ phế quản gốc", "Cơn hen phế quản ác tính"),
+            goldenDiagnosis = "[J93.0] Tràn khí màng phổi áp lực tự phát hoặc chấn thương (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("j93", "tran khi mang phoi", "ap luc", "tension pneumothorax", "phoi phai", "chan thuong nguc"),
+            goldenDifferentials = listOf("Chèn ép tim cấp (Cardiac Tamponade)", "Tràn máu màng phổi lượng lớn [S27.1]", "Thủng vỡ phế quản gốc", "Cơn hen phế quản ác tính [J45.0]"),
             goldenClinicalReasoning = "Bệnh nhân nam trẻ tuổi sau chấn thương ngực có triệu chứng suy hô hấp cấp nặng kèm tụt huyết áp sốc tắc nghẽn. Khám lâm sàng thấy tam chứng Galliard phổi phải, khí quản lệch trái và tĩnh mạch cổ nổi căng phồng. Đây là CẤP CỨU TỐI KHẨN Tràn khí màng phổi áp lực cần chọc kim giải áp ngay tại giường!",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do chờ đợi làm các xét nghiệm hình ảnh mà không giải áp màng phổi cấp cứu, áp lực trong lồng ngực tăng vọt làm xẹp hoàn toàn tĩnh mạch chủ, ngừng tuần hoàn hô hấp!",
@@ -408,9 +421,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Da lạnh vã mồ hôi, tím tái ngoại vi.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Cơn hen phế quản ác tính đe dọa tính mạng - Dấu hiệu Phổi câm (Severe Acute Life-threatening Asthma / Silent Chest)",
-            diagnosisKeywords = listOf("hen phe quan", "ac tinh", "phoi cam", "silent chest", "suy ho hap"),
-            goldenDifferentials = listOf("Dị vật đường thở bỏ quên", "Tràn khí màng phổi tự phát", "Phù phổi cấp huyết động", "Sốc phản vệ"),
+            goldenDiagnosis = "[J45.0] Cơn hen phế quản ác tính đe dọa tính mạng - Dấu hiệu Phổi câm (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("j45", "hen phe quan", "ac tinh", "phoi cam", "silent chest", "suy ho hap"),
+            goldenDifferentials = listOf("Dị vật đường thở bỏ quên [T17]", "Tràn khí màng phổi tự phát [J93.0]", "Phù phổi cấp huyết động [I50.1]", "Sốc phản vệ [T78.2]"),
             goldenClinicalReasoning = "Bệnh nhân hen nặng có dấu hiệu 'Phổi câm' (Silent Chest) - cấp cứu tối khẩn chứng tỏ tắc nghẽn phế quản tối đa đe dọa ngưng thở. Cần phối hợp Salbutamol khí dung liên tục, Corticoid tiêm mạch, Magnesi Sulfat và Adrenaline tiêm bắp.",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do dùng thuốc an thần hoặc chậm trễ xử trí tích cực, bệnh nhân kiệt cơ hô hấp hoàn toàn, ngừng thở và chuyển sang ngừng tim!",
@@ -521,9 +534,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Ban mề đay phù mạch toàn thân dạng bản lớn gồ trên mặt da.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Sốc phản vệ độ III (nguy kịch) do kháng sinh Ceftriaxone (Anaphylactic Shock Grade III)",
-            diagnosisKeywords = listOf("soc phan ve", "anaphylaxis", "do iii", "ceftriaxone", "adrenaline"),
-            goldenDifferentials = listOf("Phù mạch di truyền do thiếu C1-INH", "Cơn hen phế quản cấp", "Sốc tim do nhồi máu cơ tim", "Hạ huyết áp tư thế"),
+            goldenDiagnosis = "[T78.2] Sốc phản vệ độ III (nguy kịch) do thuốc tiêm [T88.6] (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("t78", "soc phan ve", "anaphylaxis", "do iii", "ceftriaxone", "adrenaline"),
+            goldenDifferentials = listOf("Phù mạch di truyền do thiếu C1-INH", "Cơn hen phế quản cấp [J45.0]", "Sốc tim do nhồi máu cơ tim [R57.0]", "Hạ huyết áp tư thế"),
             goldenClinicalReasoning = "Đạt chuẩn chẩn đoán Sốc phản vệ độ III theo Thông tư 51/2017/TT-BYT của Bộ Y Tế. Xử trí duy nhất và quyết định sống còn là TIÊM BẮP ADRENALINE NGAY LẬP TỨC ở mặt trước ngoài đùi.",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Không tiêm Adrenaline ngay dẫn tới phù nề thanh môn bít tắc hoàn toàn khí quản, thiếu oxy não không thể hồi phục và ngừng tim!",
@@ -635,9 +648,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Da ấm hồng, không bầm dập chấn thương sọ não.", false)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Đột quỵ thiếu máu não cấp bán cầu trái giờ thứ 2 - Tắc động mạch não giữa (MCA) - Rung nhĩ - Giờ vàng điều trị tiêu sợi huyết (Acute Ischemic Stroke)",
-            diagnosisKeywords = listOf("dot quy", "thieu mau nao", "nhoi mau nao", "gio vang", "tieu soi huyet", "rtpa", "alteplase"),
-            goldenDifferentials = listOf("Xuất huyết não nội sọ", "Hạ đường huyết cấp", "Cơn thoáng thiếu máu não (TIA)", "Liệt Bell dây VII ngoại biên"),
+            goldenDiagnosis = "[I63.9] Nhồi máu não cấp giờ thứ 2 - Tắc động mạch não giữa (MCA) (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("i63", "dot quy", "thieu mau nao", "nhoi mau nao", "gio vang", "tieu soi huyet", "rtpa", "alteplase"),
+            goldenDifferentials = listOf("Xuất huyết não nội sọ [I61.9]", "Hạ đường huyết cấp [E16.2]", "Cơn thoáng thiếu máu não (TIA) [G45.9]", "Liệt Bell dây VII ngoại biên"),
             goldenClinicalReasoning = "Bệnh nhân có triệu chứng FAST điển hình trong vòng 4.5 giờ vàng. CT sọ não không cản quang loại trừ hoàn toàn xuất huyết não và thang điểm ASPECTS 8 điểm. Đạt đầy đủ tiêu chuẩn chỉ định dùng thuốc tiêu sợi huyết Alteplase (rTPA).",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do trì hoãn quá mốc 4.5 giờ vàng, cửa sổ điều trị tiêu sợi huyết đã khép lại! Vùng não hoại tử lan rộng, bệnh nhân liệt nửa người vĩnh viễn và phù não chèn ép tử vong!",
@@ -762,9 +775,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Da lạnh nổi vân tím, không vết thương xuyên thấu thành bụng.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Thủng ổ loét dạ dày - Viêm phúc mạc toàn thể - Sốc nhiễm khuẩn (Perforated Peptic Ulcer / Peritonitis / Septic Shock)",
-            diagnosisKeywords = listOf("thung tang rong", "thung da day", "viem phuc mac", "soc nhiem khuan", "septic shock", "bung go", "liem hoi"),
-            goldenDifferentials = listOf("Viêm tụy cấp thể hoại tử nặng", "Nhồi máu mạc treo ruột cấp", "Viêm ruột thừa vỡ mủ", "Nhồi máu cơ tim thành dưới"),
+            goldenDiagnosis = "[K25.5] Thủng ổ loét dạ dày - Viêm phúc mạc toàn thể [K65.0] - Sốc nhiễm khuẩn [R57.2] (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("k25", "k65", "thung tang rong", "thung da day", "viem phuc mac", "soc nhiem khuan", "septic shock", "bung go", "liem hoi"),
+            goldenDifferentials = listOf("Viêm tụy cấp thể hoại tử nặng [K85.9]", "Nhồi máu mạc treo ruột cấp", "Viêm ruột thừa vỡ mủ [K35.8]", "Nhồi máu cơ tim thành dưới [I21.1]"),
             goldenClinicalReasoning = "Đau bụng đột ngột dữ dội như dao đâm kèm hội chứng viêm phúc mạc: Co cứng thành bụng như gỗ, cảm ứng phúc mạc dương tính, liềm hơi dưới cơ hoành trên X-quang bụng. Sốc nhiễm khuẩn cần hồi sức dịch cấp tốc và chuyển mổ cấp cứu.",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do trì hoãn hồi sức và phẫu thuật, nhiễm trùng ổ bụng bùng phát dẫn tới sốc nhiễm khuẩn kháng trị, suy đa tạng tử vong!",
@@ -877,9 +890,9 @@ object EmergencyCaseDatabase {
                 PhysicalExamSystemItem("sys_skin", "Da & Chấn thương", "Da lạnh ướt đẫm mồ hôi, dính hóa chất.", true)
             ),
             availableLabs = labs,
-            goldenDiagnosis = "Ngộ độc cấp thuốc trừ sâu phospho hữu cơ mức độ nặng - Hội chứng Muscarinic và Nicotinic (Acute Organophosphate Poisoning)",
-            diagnosisKeywords = listOf("phospho huu co", "thuoc tru sau", "ngoc doc", "organophosphate", "atropine", "pam", "cholinesterase"),
-            goldenDifferentials = listOf("Ngộ độc thuốc trừ sâu Carbamate", "Ngộ độc nhóm Opiate", "Đột quỵ xuất huyết cầu não", "Ngộ độc thuốc phong bế Beta"),
+            goldenDiagnosis = "[T60.0] Ngộ độc cấp thuốc trừ sâu phospho hữu cơ (OP) (ICD-10 06/2026/TT-BYT | CCMS)",
+            diagnosisKeywords = listOf("t60", "phospho huu co", "thuoc tru sau", "ngoc doc", "organophosphate", "atropine", "pam", "cholinesterase"),
+            goldenDifferentials = listOf("Ngộ độc thuốc trừ sâu Carbamate", "Ngộ độc nhóm Opiate [T40]", "Đột quỵ xuất huyết cầu não [I61.9]", "Ngộ độc thuốc phong bế Beta"),
             goldenClinicalReasoning = "Triệu chứng lâm sàng hội tụ đầy đủ 3 hội chứng kinh điển: Muscarinic (SLUDGE), Nicotinic (giật cơ), Thần kinh trung ương (hôn mê). Kết quả men Cholinesterase máu giảm nặng < 20% khẳng định ngộ độc Phospho hữu cơ. Phải dùng ngay ATROPINE liều cao tiêm tĩnh mạch đạt mục tiêu Atropin hóa, dùng thuốc giải độc đặc hiệu PAM và rửa dạ dày than hoạt.",
             standardOrders = MasterHospitalOrders.getAllMasterOrders(),
             badDelayNarrative = "Do không tiêm Atropine liều đủ cao hoặc chậm trễ bảo vệ đường thở, đờm dãi ngập đường thở gây ngạt cơ học và ngừng tim!",
@@ -929,29 +942,29 @@ object EmergencyCaseDatabase {
         drugScreenResult: String = "Test nhanh ma túy nước tiểu 4 chất (Morphine, Amphetamine, THC, Ketamine): Âm tính."
     ): List<LabTestItem> {
         return listOf(
-            LabTestItem("lab_ecg", "Điện tâm đồ 12 chuyển đạo tại giường (ECG)", "Thăm dò chức năng", 80000L, 2, "Nhịp xoang", if (ecgCritical) "BẤT THƯỜNG NGUY KỊCH" else "Bình thường", ecgResult, ecgCritical, ecgRecommended),
-            LabTestItem("lab_trop", "Troponin I độ nhạy cao (hs-cTnI)", "Sinh hóa - Miễn dịch", 150000L, 15, "< 14 ng/L", if (tropCritical) "TĂNG RẤT CAO" else "Bình thường", tropResult, tropCritical, tropRecommended),
-            LabTestItem("lab_abg", "Khí máu động mạch (ABG)", "Khí máu - Hồi sức", 120000L, 5, "pH 7.35-7.45", if (abgCritical) "RỐI LOẠN TOAN KIỀM NẶNG" else "Bình thường", abgResult, abgCritical, abgRecommended),
-            LabTestItem("lab_lactate", "Lactate máu động mạch", "Khí máu - Hồi sức", 90000L, 10, "< 2.0 mmol/L", if (lactateCritical) "TĂNG CAO THIẾU MÁU MÔ" else "Bình thường", lactateResult, lactateCritical, lactateRecommended),
-            LabTestItem("lab_cbc", "Tổng phân tích tế bào máu ngoại vi (CBC)", "Huyết học", 65000L, 10, "WBC 4-10 G/L", if (cbcCritical) "BẤT THƯỜNG" else "Bình thường", cbcResult, cbcCritical, cbcRecommended),
-            LabTestItem("lab_coag", "Đông máu cơ bản (PT, aPTT, INR, Fibrinogen)", "Huyết học - Đông máu", 110000L, 15, "INR 0.8-1.2", "Bình thường", coagResult, false, false),
-            LabTestItem("lab_ddimer", "D-Dimer định lượng", "Huyết học - Đông máu", 220000L, 15, "< 500 ng/ml", "Bình thường", dDimerResult, false, false),
-            LabTestItem("lab_lytes", "Điện giải đồ (Na+, K+, Cl-, Ca2+)", "Sinh hóa", 75000L, 10, "K+ 3.5-5.0 mmol/L", "Bình thường", lytesResult, false, false),
-            LabTestItem("lab_liver_panc", "Men gan (AST, ALT) & Men tụy (Amylase)", "Sinh hóa", 130000L, 15, "Men gan < 40 U/L", "Bình thường", liverPancreasResult, false, false),
-            LabTestItem("lab_renal", "Ure, Creatinine máu (Chức năng thận)", "Sinh hóa", 60000L, 10, "Crea < 106 μmol/L", "Bình thường", renalResult, false, false),
-            LabTestItem("lab_sugar", "Đường huyết mao mạch tại giường", "Sinh hóa cấp cứu", 30000L, 1, "4.0 - 7.0 mmol/L", "Bình thường", bloodSugarResult, false, true),
-            LabTestItem("lab_che", "Hoạt độ men Cholinesterase máu (ChE)", "Độc chất", 140000L, 20, "4,000 - 12,000 U/L", if (cheCritical) "GIẢM NẶNG < 20%" else "Bình thường", cheResult, cheCritical, cheRecommended),
-            LabTestItem("lab_pct", "Procalcitonin (PCT) định lượng", "Miễn dịch nhiễm khuẩn", 280000L, 20, "< 0.5 ng/ml", "Bình thường", pctResult, false, false),
-            LabTestItem("lab_xray_chest", "X-quang ngực thẳng tại giường", "Chẩn đoán hình ảnh", 120000L, 5, "Phổi sáng đều", if (xrayChestCritical) "BẤT THƯỜNG NGUY HIỂM" else "Bình thường", xrayChestResult, xrayChestCritical, xrayChestRecommended),
-            LabTestItem("lab_xray_abd", "X-quang bụng không chuẩn bị đứng", "Chẩn đoán hình ảnh", 120000L, 10, "Không liềm hơi", if (xrayAbdCritical) "LIỀM HƠI DƯỚI HOÀNH" else "Bình thường", xrayAbdResult, xrayAbdCritical, xrayAbdRecommended),
-            LabTestItem("lab_efast", "Siêu âm cấp cứu tại giường E-FAST", "Thăm dò hình ảnh", 160000L, 5, "Không dịch tự do", if (efastCritical) "BẤT THƯỜNG" else "Bình thường", efastResult, efastCritical, efastRecommended),
-            LabTestItem("lab_focus_echo", "Siêu âm tim tập trung cấp cứu (FoCUS)", "Thăm dò hình ảnh", 200000L, 7, "EF > 55%", "Đã khảo sát", focusEchoResult, false, false),
-            LabTestItem("lab_ct_brain", "Chụp CT sọ não không cản quang", "Chẩn đoán hình ảnh", 850000L, 12, "Không xuất huyết", if (ctBrainCritical) "TỔN THƯƠNG THIẾU MÁU" else "Bình thường", ctBrainResult, ctBrainCritical, ctBrainRecommended),
-            LabTestItem("lab_ct_chest", "Chụp CT ngực có cản quang (CT Angio)", "Chẩn đoán hình ảnh", 1250000L, 18, "Không bóc tách", "Đã dựng hình", ctChestResult, false, false),
-            LabTestItem("lab_ct_abd", "Chụp CT ổ bụng đa dãy", "Chẩn đoán hình ảnh", 140000L, 20, "Không tổn thương", "Đã dựng hình", ctAbdResult, false, false),
-            LabTestItem("lab_blood_cult", "Cấy máu 2 vị trí", "Vi sinh", 250000L, 60, "Đang cấy", "Đang xử lý trong máy cấy", bloodCultureResult, false, false),
-            LabTestItem("lab_urinalysis", "Tổng phân tích nước tiểu 10 thông số", "Xét nghiệm nước tiểu", 45000L, 8, "Bình thường", "Bình thường", urinalysisResult, false, false),
-            LabTestItem("lab_drug_screen", "Test nhanh ma túy nước tiểu 4 chất", "Độc chất cấp cứu", 90000L, 5, "Âm tính", "Âm tính", drugScreenResult, false, false)
+            LabTestItem("lab_ecg", "Điện tâm đồ 12 chuyển đạo tại giường (ECG)", "Thăm dò chức năng", 80000L, 2, "Nhịp xoang", "Đã ghi nhận bản điện tim", ecgResult, ecgCritical, ecgRecommended),
+            LabTestItem("lab_trop", "Troponin I độ nhạy cao (hs-cTnI)", "Sinh hóa - Miễn dịch", 150000L, 15, "< 14 ng/L", "Đã định lượng hs-cTnI", tropResult, tropCritical, tropRecommended),
+            LabTestItem("lab_abg", "Khí máu động mạch (ABG)", "Khí máu - Hồi sức", 120000L, 5, "pH 7.35-7.45", "Đã phân tích khí máu", abgResult, abgCritical, abgRecommended),
+            LabTestItem("lab_lactate", "Lactate máu động mạch", "Khí máu - Hồi sức", 90000L, 10, "< 2.0 mmol/L", "Đã có chỉ số Lactate", lactateResult, lactateCritical, lactateRecommended),
+            LabTestItem("lab_cbc", "Tổng phân tích tế bào máu ngoại vi (CBC)", "Huyết học", 65000L, 10, "WBC 4-10 G/L", "Đã đếm tế bào máu", cbcResult, cbcCritical, cbcRecommended),
+            LabTestItem("lab_coag", "Đông máu cơ bản (PT, aPTT, INR, Fibrinogen)", "Huyết học - Đông máu", 110000L, 15, "INR 0.8-1.2", "Đã có bộ đông máu", coagResult, false, false),
+            LabTestItem("lab_ddimer", "D-Dimer định lượng", "Huyết học - Đông máu", 220000L, 15, "< 500 ng/ml", "Đã định lượng D-Dimer", dDimerResult, false, false),
+            LabTestItem("lab_lytes", "Điện giải đồ (Na+, K+, Cl-, Ca2+)", "Sinh hóa", 75000L, 10, "K+ 3.5-5.0 mmol/L", "Đã đo ion đồ", lytesResult, false, false),
+            LabTestItem("lab_liver_panc", "Men gan (AST, ALT) & Men tụy (Amylase)", "Sinh hóa", 130000L, 15, "Men gan < 40 U/L", "Đã đo men gan, tụy", liverPancreasResult, false, false),
+            LabTestItem("lab_renal", "Ure, Creatinine máu (Chức năng thận)", "Sinh hóa", 60000L, 10, "Crea < 106 μmol/L", "Đã có chức năng thận", renalResult, false, false),
+            LabTestItem("lab_sugar", "Đường huyết mao mạch tại giường", "Sinh hóa cấp cứu", 30000L, 1, "4.0 - 7.0 mmol/L", "Đã đo đường huyết", bloodSugarResult, false, true),
+            LabTestItem("lab_che", "Hoạt độ men Cholinesterase máu (ChE)", "Độc chất", 140000L, 20, "4,000 - 12,000 U/L", "Đã định lượng ChE", cheResult, cheCritical, cheRecommended),
+            LabTestItem("lab_pct", "Procalcitonin (PCT) định lượng", "Miễn dịch nhiễm khuẩn", 280000L, 20, "< 0.5 ng/ml", "Đã định lượng PCT", pctResult, false, false),
+            LabTestItem("lab_xray_chest", "X-quang ngực thẳng tại giường", "Chẩn đoán hình ảnh", 120000L, 5, "Phổi sáng đều", "Đã chụp phim X-quang", xrayChestResult, xrayChestCritical, xrayChestRecommended),
+            LabTestItem("lab_xray_abd", "X-quang bụng không chuẩn bị đứng", "Chẩn đoán hình ảnh", 120000L, 10, "Không liềm hơi", "Đã chụp phim bụng", xrayAbdResult, xrayAbdCritical, xrayAbdRecommended),
+            LabTestItem("lab_efast", "Siêu âm cấp cứu tại giường E-FAST", "Thăm dò hình ảnh", 160000L, 5, "Không dịch tự do", "Đã siêu âm E-FAST", efastResult, efastCritical, efastRecommended),
+            LabTestItem("lab_focus_echo", "Siêu âm tim tập trung cấp cứu (FoCUS)", "Thăm dò hình ảnh", 200000L, 7, "EF > 55%", "Đã khảo sát siêu âm tim", focusEchoResult, false, false),
+            LabTestItem("lab_ct_brain", "Chụp CT sọ não không cản quang", "Chẩn đoán hình ảnh", 850000L, 12, "Không xuất huyết", "Đã chụp CT sọ não", ctBrainResult, ctBrainCritical, ctBrainRecommended),
+            LabTestItem("lab_ct_chest", "Chụp CT ngực có cản quang (CT Angio)", "Chẩn đoán hình ảnh", 1250000L, 18, "Không bóc tách", "Đã dựng hình CT ngực", ctChestResult, false, false),
+            LabTestItem("lab_ct_abd", "Chụp CT ổ bụng đa dãy", "Chẩn đoán hình ảnh", 140000L, 20, "Không tổn thương", "Đã dựng hình CT bụng", ctAbdResult, false, false),
+            LabTestItem("lab_blood_cult", "Cấy máu 2 vị trí", "Vi sinh", 250000L, 60, "Đang cấy", "Đang ủ máy cấy tự động", bloodCultureResult, false, false),
+            LabTestItem("lab_urinalysis", "Tổng phân tích nước tiểu 10 thông số", "Xét nghiệm nước tiểu", 45000L, 8, "Bình thường", "Đã phân tích nước tiểu", urinalysisResult, false, false),
+            LabTestItem("lab_drug_screen", "Test nhanh ma túy nước tiểu 4 chất", "Độc chất cấp cứu", 90000L, 5, "Âm tính", "Đã test nhanh que thử", drugScreenResult, false, false)
         )
     }
 }

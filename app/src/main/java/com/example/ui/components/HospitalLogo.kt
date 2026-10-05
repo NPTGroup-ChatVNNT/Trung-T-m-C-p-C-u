@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.MedicalPrimary
 import com.example.ui.theme.MedicalPrimaryDark
-import com.example.ui.theme.MedicalGreenLight
+import com.example.ui.theme.MedicalPrimaryLight
+import com.example.ui.theme.MedicalNavy
 
 @Composable
 fun HospitalLogo(
@@ -49,11 +50,11 @@ fun HospitalLogo(
     Box(
         modifier = modifier
             .size(size)
-            .shadow(12.dp, RoundedCornerShape(size * 0.24f), spotColor = MedicalPrimary)
+            .shadow(14.dp, RoundedCornerShape(size * 0.24f), spotColor = MedicalPrimary)
             .clip(RoundedCornerShape(size * 0.24f))
             .background(
                 Brush.verticalGradient(
-                    listOf(MedicalPrimary, MedicalPrimaryDark)
+                    listOf(MedicalPrimary, MedicalNavy)
                 )
             )
             .then(
@@ -95,7 +96,7 @@ fun HospitalLogo(
                 cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
             )
 
-            // 3. Electric ECG rhythm wave cutting across center
+            // 3. Electric ECG rhythm wave cutting across center in Blue
             val ecgPath = Path().apply {
                 val midY = h * 0.5f
                 moveTo(0f, midY)
@@ -112,7 +113,7 @@ fun HospitalLogo(
                 lineTo(w, midY)
             }
 
-            // Outer dark teal accent stroke for contrast through the white cross
+            // Outer dark blue accent stroke for contrast through the white cross
             drawPath(
                 path = ecgPath,
                 color = MedicalPrimaryDark.copy(alpha = 0.95f),
@@ -123,10 +124,10 @@ fun HospitalLogo(
                 )
             )
 
-            // Inner vibrant emerald pulse line
+            // Inner vibrant sky blue pulse line
             drawPath(
                 path = ecgPath,
-                color = MedicalGreenLight.copy(alpha = if (animatedPulse) pulseAlpha else 1f),
+                color = MedicalPrimaryLight.copy(alpha = if (animatedPulse) pulseAlpha else 1f),
                 style = Stroke(
                     width = (w * 0.045f),
                     cap = StrokeCap.Round,

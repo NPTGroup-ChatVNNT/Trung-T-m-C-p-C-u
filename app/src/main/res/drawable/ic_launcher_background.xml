@@ -14,15 +14,15 @@
                 android:endX="108"
                 android:endY="108"
                 android:type="linear">
-                <item android:color="#14B8A6" android:offset="0.0" />
-                <item android:color="#0D9488" android:offset="0.5" />
-                <item android:color="#047857" android:offset="1.0" />
+                <item android:color="#3B82F6" android:offset="0.0" />
+                <item android:color="#2563EB" android:offset="0.5" />
+                <item android:color="#1E3A8A" android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
     <!-- Subtle ECG grid line accents -->
     <path
         android:pathData="M0,36L108,36 M0,54L108,54 M0,72L108,72 M36,0L36,108 M54,0L54,108 M72,0L72,108"
-        android:strokeWidth="0.5"
+        android:strokeWidth="0.8"
         android:strokeColor="#25FFFFFF" />
 </vector>

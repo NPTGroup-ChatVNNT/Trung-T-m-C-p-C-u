@@ -179,13 +179,14 @@ fun EmergencyRoomScreen(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
             )
 
-            // 3. GAME QUEST STEP NAVIGATION BAR (5 STREAMLINED STEPS)
+            // 3. GAME QUEST STEP NAVIGATION BAR (6 STREAMLINED STEPS)
             val questSteps = listOf(
-                "1. Khám & Bệnh sử",
-                "2. Xét nghiệm",
-                "3. Chẩn đoán",
-                "4. Cấp cứu",
-                "5. Giao ban"
+                "Khám & Bệnh sử",
+                "Cận lâm sàng",
+                "Chẩn đoán",
+                "Xử trí & Điều trị",
+                "Bệnh án điện tử",
+                "Giao ban"
             )
 
             ScrollableTabRow(
@@ -270,7 +271,15 @@ fun EmergencyRoomScreen(
                         isRescued = state.isRescued,
                         onProceedToNextStep = { viewModel.completeInterventionsAndCheckGratitude() }
                     )
-                    5 -> DebriefAndHandoverStep(
+                    5 -> ElectronicMedicalRecordStep(
+                        patientCase = patientCase,
+                        primaryDx = state.primaryDx,
+                        examinedSystems = state.examinedSystems,
+                        orderedLabIds = state.orderedLabIds,
+                        executedOrderIds = state.executedOrderIds,
+                        onProceedToDebrief = { viewModel.setStep(6) }
+                    )
+                    6 -> DebriefAndHandoverStep(
                         patientCase = patientCase,
                         examinedSystems = state.examinedSystems,
                         orderedLabIds = state.orderedLabIds,
