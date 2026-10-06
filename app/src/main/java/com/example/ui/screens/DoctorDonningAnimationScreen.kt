@@ -23,37 +23,64 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 
+/**
+ * Hiệu ứng bác sĩ tung áo blouse trắng bước vào cửa khoa cấp cứu:
+ * - Bác sĩ sải bước tiến về phía cửa khoa cấp cứu.
+ * - Áo blouse tung bay hào hùng, vạt áo bay trong gió.
+ * - Cửa tự động trượt mở đón bác sĩ vào khu cấp cứu tối khẩn.
+ * - Ánh đèn cấp cứu phản chiếu hoành tráng.
+ */
 @Composable
 fun DoctorDonningAnimationScreen(
     onAnimationFinished: () -> Unit
 ) {
-    // Stage progresses automatically: 1 -> 2 -> 3 -> Auto-finish
+    // Stage progresses automatically: 1 (Khoác áo sải bước) -> 2 (Tung vạt áo blouse) -> 3 (Cửa mở bừng sáng & bước vào) -> Kết thúc
     var stage by remember { mutableStateOf(1) }
 
-    // Fully automated background progression
     LaunchedEffect(Unit) {
         delay(900)
         stage = 2
-        delay(1000)
+        delay(1100)
         stage = 3
-        delay(1200)
-        onAnimationFinished() // Automatically enters emergency bay!
+        delay(1300)
+        onAnimationFinished()
     }
 
     // Door sliding animation (0f to 1f)
     val doorOpenProgress by animateFloatAsState(
         targetValue = if (stage == 3) 1f else 0f,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
         label = "door_open_progress"
     )
 
-    // Ambient light glow animation
-    val infiniteTransition = rememberInfiniteTransition(label = "ambient_light")
+    // Doctor walking stride transition (scale & position moving forward)
+    val walkProgress by animateFloatAsState(
+        targetValue = when (stage) {
+            1 -> 0.15f
+            2 -> 0.55f
+            else -> 1.0f
+        },
+        animationSpec = tween(durationMillis = 1000, easing = LinearOutSlowInEasing),
+        label = "walk_progress"
+    )
+
+    // Dynamic coat flare & cape fluttering wave
+    val infiniteTransition = rememberInfiniteTransition(label = "coat_flutter")
+    val flutterWave by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "flutter_wave"
+    )
+
     val lightPulse by infiniteTransition.animateFloat(
         initialValue = 0.7f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(700, easing = FastOutSlowInEasing),
+            animation = tween(650, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "light_pulse"
@@ -64,213 +91,316 @@ fun DoctorDonningAnimationScreen(
             .fillMaxSize()
             .background(DarkBackground)
     ) {
-        // AUTOMATED 2D BACKGROUND ANIMATION CANVAS
+        // CINEMATIC CANVAS: BÁC SĨ TUNG ÁO BLOUSE BƯỚC VÀO CỬA KHOA CẤP CỨU
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
 
-            // 1. Emergency Trauma Room Lighting Background
+            // 1. Phông nền sảnh cấp cứu chiều sâu
             drawRect(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0F172A), Color(0xFF050814)),
+                    colors = listOf(
+                        Color(0xFF030712), // Trần tối
+                        Color(0xFF0F172A), // Không gian hành lang
+                        Color(0xFF091428), // Sàn gạch bệnh viện
+                        Color(0xFF020617)
+                    ),
                     startY = 0f,
                     endY = h
                 )
             )
 
-            // Volumetric light beams bursting through sliding doors
+            // 2. Dải đèn trần dẫn lối phối cảnh hội tụ về cửa
+            val vanishPoint = Offset(w * 0.5f, h * 0.32f)
+            for (i in 1..4) {
+                val frac = i / 4f
+                val lightY = vanishPoint.y + frac * (h * 0.22f)
+                val leftX = vanishPoint.x - frac * (w * 0.44f)
+                val rightX = vanishPoint.x + frac * (w * 0.44f)
+                drawLine(
+                    color = Color(0x3338BDF8),
+                    start = Offset(leftX, lightY),
+                    end = Offset(leftX + 30.dp.toPx() * frac, lightY),
+                    strokeWidth = 2.5.dp.toPx() * frac
+                )
+                drawLine(
+                    color = Color(0x3338BDF8),
+                    start = Offset(rightX - 30.dp.toPx() * frac, lightY),
+                    end = Offset(rightX, lightY),
+                    strokeWidth = 2.5.dp.toPx() * frac
+                )
+            }
+
+            // 3. CỬA ĐÔI KHOA CẤP CỨU (Kính trượt tự động)
+            val doorWidth = w * 0.52f
+            val doorHeight = h * 0.44f
+            val doorTop = h * 0.16f
+            val doorOffset = doorWidth * doorOpenProgress
+
+            // Biển hiệu KHOA CẤP CỨU rực đỏ trên cửa
+            val signWidth = doorWidth * 0.9f
+            val signHeight = 22.dp.toPx()
+            val signLeft = (w - signWidth) / 2f
+            val signTop = doorTop - 26.dp.toPx()
+
+            drawRoundRect(
+                color = Color(0xFFDC2626),
+                topLeft = Offset(signLeft, signTop),
+                size = Size(signWidth, signHeight),
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+            )
+            // Đèn khẩn cấp chớp sáng
+            drawCircle(
+                color = Color(0xFFEF4444).copy(alpha = lightPulse * 0.4f),
+                radius = 35.dp.toPx(),
+                center = Offset(w * 0.5f, signTop + signHeight / 2f)
+            )
+
+            // Luồng ánh sáng cứu sinh ùa ra khi cửa mở
             if (stage == 3 && doorOpenProgress > 0.05f) {
-                val lightPath = Path().apply {
-                    moveTo(w * 0.5f, h * 0.15f)
-                    lineTo(w * (0.5f - 0.55f * doorOpenProgress), h)
-                    lineTo(w * (0.5f + 0.55f * doorOpenProgress), h)
+                val lightBeam = Path().apply {
+                    moveTo(w * 0.5f, doorTop + 20.dp.toPx())
+                    lineTo(w * (0.5f - 0.65f * doorOpenProgress), h)
+                    lineTo(w * (0.5f + 0.65f * doorOpenProgress), h)
                     close()
                 }
                 drawPath(
-                    path = lightPath,
+                    path = lightBeam,
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color(0xDD38BDF8).copy(alpha = lightPulse * 0.8f),
-                            Color(0x66FFFFFF).copy(alpha = lightPulse * 0.5f),
-                            Color(0x000284C7)
+                            Color(0xCC38BDF8).copy(alpha = lightPulse * 0.7f),
+                            Color(0x66FFFFFF).copy(alpha = lightPulse * 0.4f),
+                            Color.Transparent
                         ),
-                        center = Offset(w * 0.5f, h * 0.38f),
-                        radius = w * 0.75f
+                        center = Offset(w * 0.5f, doorTop + doorHeight * 0.4f),
+                        radius = w * 0.85f
                     )
                 )
             }
 
-            // 2. SLIDING GLASS DOUBLE DOORS
-            val doorWidth = w * 0.48f
-            val doorHeight = h * 0.65f
-            val doorTop = h * 0.18f
-            val doorOffset = doorWidth * doorOpenProgress
-
-            // Left Door
+            // Khung cửa trượt bên trái
             val leftDoorX = (w * 0.5f - doorWidth) - doorOffset
             drawRoundRect(
-                color = Color(0x3338BDF8),
+                brush = Brush.horizontalGradient(listOf(Color(0x2238BDF8), Color(0x440284C7))),
                 topLeft = Offset(leftDoorX, doorTop),
                 size = Size(doorWidth, doorHeight),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
             )
             drawRoundRect(
                 color = Color(0x8894A3B8),
                 topLeft = Offset(leftDoorX, doorTop),
                 size = Size(doorWidth, doorHeight),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
-                style = Stroke(width = 3.dp.toPx())
-            )
-            drawCircle(
-                color = MedicalRed.copy(alpha = (1f - doorOpenProgress * 0.7f)),
-                radius = 24.dp.toPx(),
-                center = Offset(leftDoorX + doorWidth - 40.dp.toPx(), doorTop + doorHeight * 0.45f)
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx()),
+                style = Stroke(width = 2.5.dp.toPx())
             )
 
-            // Right Door
+            // Khung cửa trượt bên phải
             val rightDoorX = (w * 0.5f) + doorOffset
             drawRoundRect(
-                color = Color(0x3338BDF8),
+                brush = Brush.horizontalGradient(listOf(Color(0x440284C7), Color(0x2238BDF8))),
                 topLeft = Offset(rightDoorX, doorTop),
                 size = Size(doorWidth, doorHeight),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
             )
             drawRoundRect(
                 color = Color(0x8894A3B8),
                 topLeft = Offset(rightDoorX, doorTop),
                 size = Size(doorWidth, doorHeight),
-                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx()),
-                style = Stroke(width = 3.dp.toPx())
-            )
-            drawCircle(
-                color = MedicalRed.copy(alpha = (1f - doorOpenProgress * 0.7f)),
-                radius = 24.dp.toPx(),
-                center = Offset(rightDoorX + 40.dp.toPx(), doorTop + doorHeight * 0.45f)
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx()),
+                style = Stroke(width = 2.5.dp.toPx())
             )
 
-            // 3. 2D DOCTOR FIGURE (ANIME/GAME STYLING)
+            // Vạch dẫn đường xe cấp cứu đỏ dẫn vào cửa
+            drawLine(
+                color = Color(0xCCEF4444),
+                start = Offset(w * 0.5f, doorTop + doorHeight),
+                end = Offset(w * 0.5f, h),
+                strokeWidth = 3.dp.toPx()
+            )
+
+            // 4. BÁC SĨ TUNG ÁO BLOUSE TRẮNG SẢI BƯỚC TIẾN VÀO CỬA CẤP CỨU
+            // Tỷ lệ bác sĩ tiến dần vào cửa (bước đi từ tiền cảnh hướng về cánh cửa)
+            val scaleFactor = 1.0f + walkProgress * 0.25f
             val docCenterX = w * 0.5f
-            val docCenterY = h * 0.54f
+            val docCenterY = (h * 0.62f) - (walkProgress * 40.dp.toPx())
 
-            // Head & Hair
-            val headRadius = 40.dp.toPx()
-            val headCenter = Offset(docCenterX, docCenterY - 110.dp.toPx())
+            // Sải bước chân (Chân trái & Chân phải đang bước)
+            val legWidth = 20.dp.toPx() * scaleFactor
+            val legHeight = 70.dp.toPx() * scaleFactor
+            val stepOffset = if (stage >= 2) 18.dp.toPx() * scaleFactor else 8.dp.toPx()
 
-            drawCircle(color = Color(0xFF1E293B), radius = headRadius * 1.15f, center = headCenter)
-            drawCircle(color = Color(0xFFFDE68A), radius = headRadius, center = headCenter)
+            // Quần scrubs xanh thẫm
+            drawRoundRect(
+                color = Color(0xFF0F2B48),
+                topLeft = Offset(docCenterX - legWidth - 4.dp.toPx(), docCenterY + 70.dp.toPx() * scaleFactor),
+                size = Size(legWidth, legHeight + stepOffset * 0.5f),
+                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+            )
+            drawRoundRect(
+                color = Color(0xFF0A1E33),
+                topLeft = Offset(docCenterX + 4.dp.toPx(), docCenterY + 70.dp.toPx() * scaleFactor - stepOffset * 0.3f),
+                size = Size(legWidth, legHeight - stepOffset * 0.2f),
+                cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+            )
 
-            // Focused anime eyes
-            drawCircle(color = Color(0xFF0F172A), radius = 5.dp.toPx(), center = Offset(docCenterX - 14.dp.toPx(), headCenter.y - 4.dp.toPx()))
-            drawCircle(color = Color(0xFF0F172A), radius = 5.dp.toPx(), center = Offset(docCenterX + 14.dp.toPx(), headCenter.y - 4.dp.toPx()))
-            drawCircle(color = Color.White, radius = 2.dp.toPx(), center = Offset(docCenterX - 15.dp.toPx(), headCenter.y - 6.dp.toPx()))
-            drawCircle(color = Color.White, radius = 2.dp.toPx(), center = Offset(docCenterX + 13.dp.toPx(), headCenter.y - 6.dp.toPx()))
+            // Giày y tế chuyên dụng
+            drawRoundRect(
+                color = Color.White,
+                topLeft = Offset(docCenterX - legWidth - 6.dp.toPx(), docCenterY + 70.dp.toPx() * scaleFactor + legHeight),
+                size = Size(legWidth + 8.dp.toPx(), 14.dp.toPx() * scaleFactor),
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+            )
+            drawRoundRect(
+                color = Color.White,
+                topLeft = Offset(docCenterX + 2.dp.toPx(), docCenterY + 70.dp.toPx() * scaleFactor + legHeight - stepOffset * 0.2f),
+                size = Size(legWidth + 8.dp.toPx(), 14.dp.toPx() * scaleFactor),
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
+            )
 
-            // Blue Medical Mask
-            val maskPath = Path().apply {
-                moveTo(headCenter.x - headRadius * 0.85f, headCenter.y + 4.dp.toPx())
-                lineTo(headCenter.x + headRadius * 0.85f, headCenter.y + 4.dp.toPx())
-                lineTo(headCenter.x + headRadius * 0.65f, headCenter.y + headRadius * 0.95f)
-                lineTo(headCenter.x - headRadius * 0.65f, headCenter.y + headRadius * 0.95f)
+            // 5. VAT ÁO BLOUSE TRẮNG TUNG BAY HÀO HÙNG (Dramatic Fluttering White Coat)
+            val coatFlareSpread = when (stage) {
+                1 -> 40.dp.toPx() * scaleFactor
+                2 -> 88.dp.toPx() * scaleFactor + (flutterWave * 8.dp.toPx())
+                else -> 105.dp.toPx() * scaleFactor + (flutterWave * 12.dp.toPx())
+            }
+
+            val coatTop = docCenterY - 45.dp.toPx() * scaleFactor
+            val coatBottom = docCenterY + 80.dp.toPx() * scaleFactor
+
+            // Vạt áo blouse trắng tung bay bên trái
+            val leftCoatPath = Path().apply {
+                moveTo(docCenterX - 28.dp.toPx() * scaleFactor, coatTop + 15.dp.toPx())
+                cubicTo(
+                    docCenterX - 45.dp.toPx() * scaleFactor - coatFlareSpread * 0.4f, coatTop + 40.dp.toPx(),
+                    docCenterX - 40.dp.toPx() * scaleFactor - coatFlareSpread, coatBottom - 20.dp.toPx(),
+                    docCenterX - 30.dp.toPx() * scaleFactor - coatFlareSpread * 0.85f, coatBottom
+                )
+                lineTo(docCenterX - 10.dp.toPx() * scaleFactor, coatBottom - 10.dp.toPx())
+                lineTo(docCenterX - 18.dp.toPx() * scaleFactor, coatTop + 20.dp.toPx())
                 close()
             }
-            drawPath(path = maskPath, color = Color(0xFF0284C7))
-
-            // Body: Scrubs & White Lab Coat
-            val torsoTop = headCenter.y + headRadius * 0.85f
-            val torsoWidth = 110.dp.toPx()
-            val torsoHeight = 160.dp.toPx()
-
-            // Scrubs Base
-            drawRoundRect(
-                color = ScrubTealDark,
-                topLeft = Offset(docCenterX - torsoWidth / 2f, torsoTop),
-                size = Size(torsoWidth, torsoHeight),
-                cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
+            // Bóng đổ vạt áo
+            drawPath(
+                path = leftCoatPath,
+                color = Color(0xFFCBD5E1)
+            )
+            // Lớp áo chính màu trắng tinh
+            drawPath(
+                path = leftCoatPath,
+                brush = Brush.horizontalGradient(
+                    listOf(Color(0xFFE2E8F0), Color.White, Color(0xFFF8FAFC))
+                )
             )
 
-            // Stage 1+: White Lab Coat gliding on shoulders & Badge
-            if (stage >= 1) {
-                val coatWidth = torsoWidth * 1.25f
-                val coatHeight = torsoHeight * 1.15f
-                val coatLeft = docCenterX - coatWidth / 2f
+            // Vạt áo blouse trắng tung bay bên phải
+            val rightCoatPath = Path().apply {
+                moveTo(docCenterX + 28.dp.toPx() * scaleFactor, coatTop + 15.dp.toPx())
+                cubicTo(
+                    docCenterX + 45.dp.toPx() * scaleFactor + coatFlareSpread * 0.4f, coatTop + 40.dp.toPx(),
+                    docCenterX + 40.dp.toPx() * scaleFactor + coatFlareSpread, coatBottom - 20.dp.toPx(),
+                    docCenterX + 30.dp.toPx() * scaleFactor + coatFlareSpread * 0.85f, coatBottom
+                )
+                lineTo(docCenterX + 10.dp.toPx() * scaleFactor, coatBottom - 10.dp.toPx())
+                lineTo(docCenterX + 18.dp.toPx() * scaleFactor, coatTop + 20.dp.toPx())
+                close()
+            }
+            drawPath(
+                path = rightCoatPath,
+                color = Color(0xFFCBD5E1)
+            )
+            drawPath(
+                path = rightCoatPath,
+                brush = Brush.horizontalGradient(
+                    listOf(Color(0xFFF8FAFC), Color.White, Color(0xFFE2E8F0))
+                )
+            )
 
-                drawRoundRect(
-                    color = Color(0xFFF8FAFC),
-                    topLeft = Offset(coatLeft, torsoTop - 6.dp.toPx()),
-                    size = Size(coatWidth, coatHeight),
-                    cornerRadius = CornerRadius(20.dp.toPx(), 20.dp.toPx())
-                )
-                // Coat lapels
-                drawLine(
-                    color = Color(0xFF94A3B8),
-                    start = Offset(docCenterX - 22.dp.toPx(), torsoTop - 4.dp.toPx()),
-                    end = Offset(docCenterX - 8.dp.toPx(), torsoTop + 60.dp.toPx()),
-                    strokeWidth = 3f
-                )
-                drawLine(
-                    color = Color(0xFF94A3B8),
-                    start = Offset(docCenterX + 22.dp.toPx(), torsoTop - 4.dp.toPx()),
-                    end = Offset(docCenterX + 8.dp.toPx(), torsoTop + 60.dp.toPx()),
-                    strokeWidth = 3f
-                )
+            // Thân áo blouse & áo scrubs bên trong
+            val torsoWidth = 62.dp.toPx() * scaleFactor
+            val torsoHeight = 90.dp.toPx() * scaleFactor
+            drawRoundRect(
+                brush = Brush.verticalGradient(listOf(Color.White, Color(0xFFF1F5F9))),
+                topLeft = Offset(docCenterX - torsoWidth / 2f, coatTop),
+                size = Size(torsoWidth, torsoHeight),
+                cornerRadius = CornerRadius(14.dp.toPx(), 14.dp.toPx())
+            )
 
-                // Red Emergency Name Tag Badge
-                val badgeX = docCenterX - coatWidth * 0.35f
-                val badgeY = torsoTop + 35.dp.toPx()
-                drawRoundRect(
-                    color = MedicalRed,
-                    topLeft = Offset(badgeX, badgeY),
-                    size = Size(28.dp.toPx(), 16.dp.toPx()),
-                    cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx())
-                )
-                drawRoundRect(
-                    color = Color.White,
-                    topLeft = Offset(badgeX + 2.dp.toPx(), badgeY + 2.dp.toPx()),
-                    size = Size(24.dp.toPx(), 5.dp.toPx()),
-                    cornerRadius = CornerRadius(1.dp.toPx(), 1.dp.toPx())
+            // Cổ áo chữ V của áo Scrubs xanh bên trong
+            val vScrubsPath = Path().apply {
+                moveTo(docCenterX - 14.dp.toPx() * scaleFactor, coatTop)
+                lineTo(docCenterX, coatTop + 24.dp.toPx() * scaleFactor)
+                lineTo(docCenterX + 14.dp.toPx() * scaleFactor, coatTop)
+                close()
+            }
+            drawPath(path = vScrubsPath, color = Color(0xFF0284C7))
+
+            // Bảng tên bác sĩ cấp cứu (Emergency badge)
+            drawRoundRect(
+                color = Color(0xFFEF4444),
+                topLeft = Offset(docCenterX - 24.dp.toPx() * scaleFactor, coatTop + 26.dp.toPx() * scaleFactor),
+                size = Size(18.dp.toPx() * scaleFactor, 10.dp.toPx() * scaleFactor),
+                cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
+            )
+
+            // Ống nghe Littmann vắt qua vai
+            val stethPath = Path().apply {
+                moveTo(docCenterX - 18.dp.toPx() * scaleFactor, coatTop + 2.dp.toPx())
+                cubicTo(
+                    docCenterX - 22.dp.toPx() * scaleFactor, coatTop + 45.dp.toPx() * scaleFactor,
+                    docCenterX + 22.dp.toPx() * scaleFactor, coatTop + 45.dp.toPx() * scaleFactor,
+                    docCenterX + 18.dp.toPx() * scaleFactor, coatTop + 2.dp.toPx()
                 )
             }
+            drawPath(
+                path = stethPath,
+                color = Color(0xFF0F172A),
+                style = Stroke(width = 3.5.dp.toPx() * scaleFactor, cap = StrokeCap.Round)
+            )
+            // Quả chuông nghe kim loại
+            drawCircle(
+                color = Color(0xFF94A3B8),
+                radius = 6.dp.toPx() * scaleFactor,
+                center = Offset(docCenterX + 4.dp.toPx(), coatTop + 48.dp.toPx() * scaleFactor)
+            )
 
-            // Stage 2+: Stethoscope draped over neck & Blue Nitrile Gloves
-            if (stage >= 2) {
-                val stethPath = Path().apply {
-                    moveTo(docCenterX - 26.dp.toPx(), torsoTop)
-                    cubicTo(
-                        docCenterX - 30.dp.toPx(), torsoTop + 65.dp.toPx(),
-                        docCenterX + 30.dp.toPx(), torsoTop + 65.dp.toPx(),
-                        docCenterX + 26.dp.toPx(), torsoTop
-                    )
-                }
-                drawPath(
-                    path = stethPath,
-                    color = Color(0xFF1E293B),
-                    style = Stroke(width = 5.dp.toPx(), cap = StrokeCap.Round)
-                )
-                drawCircle(
-                    color = Color(0xFF94A3B8),
-                    radius = 9.dp.toPx(),
-                    center = Offset(docCenterX + 2.dp.toPx(), torsoTop + 68.dp.toPx())
-                )
+            // Đầu và tóc bác sĩ nhìn về phía cửa
+            val headRadius = 24.dp.toPx() * scaleFactor
+            val headCenter = Offset(docCenterX, coatTop - headRadius * 0.85f)
 
-                // Blue Nitrile Gloves
-                val handY = torsoTop + torsoHeight * 0.72f
-                val gloveColor = Color(0xFF0284C7)
-                drawRoundRect(
-                    color = gloveColor,
-                    topLeft = Offset(docCenterX - torsoWidth * 0.72f, handY),
-                    size = Size(26.dp.toPx(), 36.dp.toPx()),
-                    cornerRadius = CornerRadius(10.dp.toPx(), 10.dp.toPx())
-                )
-                drawRoundRect(
-                    color = gloveColor,
-                    topLeft = Offset(docCenterX + torsoWidth * 0.44f, handY),
-                    size = Size(26.dp.toPx(), 36.dp.toPx()),
-                    cornerRadius = CornerRadius(10.dp.toPx(), 10.dp.toPx())
-                )
-            }
+            // Tóc đen ngắn chỉnh tề
+            drawCircle(color = Color(0xFF0F172A), radius = headRadius * 1.12f, center = headCenter)
+            // Gáy & cổ
+            drawCircle(color = Color(0xFFFED7AA), radius = headRadius, center = headCenter)
+            // Cổ áo blouse ôm gáy
+            drawArc(
+                color = Color.White,
+                startAngle = 180f,
+                sweepAngle = 180f,
+                useCenter = true,
+                topLeft = Offset(headCenter.x - headRadius * 0.9f, headCenter.y + 4.dp.toPx()),
+                size = Size(headRadius * 1.8f, headRadius * 0.8f)
+            )
+
+            // Cánh tay vung mạnh khi bước vào (Găng tay y tế xanh vô khuẩn)
+            val armY = coatTop + 35.dp.toPx() * scaleFactor
+            val gloveColor = Color(0xFF0284C7)
+            // Tay trái
+            drawRoundRect(
+                color = gloveColor,
+                topLeft = Offset(docCenterX - torsoWidth * 0.75f - coatFlareSpread * 0.3f, armY + 20.dp.toPx()),
+                size = Size(16.dp.toPx() * scaleFactor, 26.dp.toPx() * scaleFactor),
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
+            )
+            // Tay phải
+            drawRoundRect(
+                color = gloveColor,
+                topLeft = Offset(docCenterX + torsoWidth * 0.55f + coatFlareSpread * 0.3f, armY + 14.dp.toPx()),
+                size = Size(16.dp.toPx() * scaleFactor, 26.dp.toPx() * scaleFactor),
+                cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
+            )
         }
 
-        // TOP CINEMATIC OVERLAY
+        // TOP CINEMATIC CAPTION
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -278,22 +408,23 @@ fun DoctorDonningAnimationScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val statusText = when (stage) {
-                1 -> "Bác sĩ khoác áo blouse trắng, cài bảng tên ca trực..."
-                2 -> "Quàng ống nghe Littmann, đeo găng tay y tế vô khuẩn..."
-                else -> "Cửa đôi cấp cứu tự động mở! Đang tiến vào ca trực..."
+                1 -> "Bác sĩ khoác áo blouse trắng, sải bước dứt khoát..."
+                2 -> "Tung áo blouse trắng kiêu hãnh, chỉnh trang ống nghe..."
+                else -> "Cửa khoa cấp cứu bật mở! Bước vào giành giật sự sống..."
             }
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xCC0F172A))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xCC0F172A),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x6638BDF8)),
+                shadowElevation = 8.dp
             ) {
                 Text(
                     text = statusText,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
                 )
             }
         }
@@ -308,11 +439,12 @@ fun DoctorDonningAnimationScreen(
                 .height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xAA1E293B),
+                containerColor = Color(0xDD1E293B),
                 contentColor = Color.White
-            )
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x8838BDF8))
         ) {
-            Text("VÀO CA NGAY", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text("VÀO CA CẤP CỨU NGAY", fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(6.dp))
             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
         }

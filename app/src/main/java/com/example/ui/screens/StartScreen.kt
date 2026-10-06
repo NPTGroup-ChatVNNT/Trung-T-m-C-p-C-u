@@ -1,11 +1,14 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -14,7 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -24,8 +30,207 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.SavedShiftData
 import com.example.model.PatientCase
+import com.example.ui.components.EmsAppLogo
 import com.example.ui.components.HospitalLogo
 import com.example.ui.theme.*
+
+/**
+ * Phong nền mở đầu theo phong cách "Khoa Cấp Cứu_20261006_093905_0000.png":
+ * Không gian sảnh cấp cứu hiện đại, biển hiệu LED KHOA CẤP CỨU rực sáng,
+ * ánh đèn trần và cửa tự động chuyên nghiệp.
+ */
+@Composable
+fun EmergencyDepartmentBackground(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "er_bg_ambient")
+    val beaconPulse by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "beacon_pulse"
+    )
+
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+
+        // 1. Phông nền chiều sâu: Tông xanh thẫm bệnh viện hiện đại (Clinical Dark Slate)
+        drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color(0xFF020617), // Trần nhà đêm
+                    Color(0xFF0B192C), // Khu vực hành lang
+                    Color(0xFF0F2038), // Sảnh khoa cấp cứu
+                    Color(0xFF020B18)  // Sàn gạch phản chiếu
+                ),
+                startY = 0f,
+                endY = h
+            )
+        )
+
+        // 2. Phối cảnh trần hành lang và đèn LED dài cao cấp (Perspective Corridor Lights)
+        val ceilingVanishX = w * 0.5f
+        val ceilingVanishY = h * 0.18f
+
+        // Đèn trần thanh dài 2 bên (Fluorescent ceiling strips)
+        for (i in 0..4) {
+            val progress = (i + 1) / 5f
+            val stripY = ceilingVanishY + progress * (h * 0.22f)
+            val stripLeft = ceilingVanishX - progress * (w * 0.46f)
+            val stripRight = ceilingVanishX + progress * (w * 0.46f)
+            val stripWidth = 40.dp.toPx() * progress
+
+            // Đèn trái
+            drawLine(
+                color = Color(0xFFE2E8F0).copy(alpha = 0.25f + progress * 0.2f),
+                start = Offset(stripLeft, stripY),
+                end = Offset(stripLeft + stripWidth, stripY),
+                strokeWidth = 3.dp.toPx() * progress,
+                cap = StrokeCap.Round
+            )
+            // Đèn phải
+            drawLine(
+                color = Color(0xFFE2E8F0).copy(alpha = 0.25f + progress * 0.2f),
+                start = Offset(stripRight - stripWidth, stripY),
+                end = Offset(stripRight, stripY),
+                strokeWidth = 3.dp.toPx() * progress,
+                cap = StrokeCap.Round
+            )
+        }
+
+        // 3. Khung cửa kính trượt tự động Khoa Cấp Cứu ở trung tâm phía sau
+        val doorTop = h * 0.18f
+        val doorHeight = h * 0.38f
+        val doorWidth = w * 0.76f
+        val doorLeft = (w - doorWidth) / 2f
+
+        // Vòm cửa kim loại
+        drawRoundRect(
+            color = Color(0xFF1E293B),
+            topLeft = Offset(doorLeft, doorTop),
+            size = Size(doorWidth, doorHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx(), 12.dp.toPx()),
+            style = Stroke(width = 3.dp.toPx())
+        )
+
+        // Cửa kính trượt kép (hai cánh kính xanh thẫm)
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color(0x3338BDF8), Color(0x110284C7))
+            ),
+            topLeft = Offset(doorLeft + 4.dp.toPx(), doorTop + 4.dp.toPx()),
+            size = Size(doorWidth - 8.dp.toPx(), doorHeight - 8.dp.toPx())
+        )
+
+        // Khe cửa đôi trung tâm
+        drawLine(
+            color = Color(0x6694A3B8),
+            start = Offset(w * 0.5f, doorTop),
+            end = Offset(w * 0.5f, doorTop + doorHeight),
+            strokeWidth = 2.dp.toPx()
+        )
+
+        // Tay vịn cửa / cảm biến quang học
+        drawLine(
+            color = Color(0xAA38BDF8),
+            start = Offset(w * 0.47f, doorTop + doorHeight * 0.4f),
+            end = Offset(w * 0.47f, doorTop + doorHeight * 0.65f),
+            strokeWidth = 3.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = Color(0xAA38BDF8),
+            start = Offset(w * 0.53f, doorTop + doorHeight * 0.4f),
+            end = Offset(w * 0.53f, doorTop + doorHeight * 0.65f),
+            strokeWidth = 3.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        // 4. Biển hiệu sáng "EMERGENCY / KHOA CẤP CỨU" trên đỉnh cửa
+        val signTop = doorTop - 24.dp.toPx()
+        val signHeight = 20.dp.toPx()
+        val signWidth = doorWidth * 0.85f
+        val signLeft = (w - signWidth) / 2f
+
+        // Khung hộp đèn đỏ cấp cứu
+        drawRoundRect(
+            color = Color(0xEE991B1B),
+            topLeft = Offset(signLeft, signTop),
+            size = Size(signWidth, signHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx())
+        )
+        drawRoundRect(
+            color = Color(0xFFEF4444).copy(alpha = beaconPulse),
+            topLeft = Offset(signLeft, signTop),
+            size = Size(signWidth, signHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx()),
+            style = Stroke(width = 2.dp.toPx())
+        )
+
+        // Ánh hào quang đèn tín hiệu khẩn cấp tỏa ra xung quanh
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color(0x55EF4444).copy(alpha = beaconPulse * 0.6f),
+                    Color(0x00EF4444)
+                ),
+                center = Offset(w * 0.5f, signTop + signHeight / 2f),
+                radius = w * 0.45f
+            ),
+            radius = w * 0.45f,
+            center = Offset(w * 0.5f, signTop + signHeight / 2f)
+        )
+
+        // 5. Đường kẻ phân làn xe cáng / chỉ dẫn sàn nhà (Floor Guide Lines)
+        // Vạch đỏ cấp cứu (Priority Red Lane) dẫn thẳng vào cửa
+        val floorStart = doorTop + doorHeight
+        val floorEnd = h
+
+        val leftLaneStart = w * 0.5f - doorWidth * 0.35f
+        val rightLaneStart = w * 0.5f + doorWidth * 0.35f
+
+        // Vạch đỏ trung tâm
+        drawLine(
+            brush = Brush.verticalGradient(
+                listOf(Color(0xCCEF4444), Color(0x44EF4444))
+            ),
+            start = Offset(w * 0.5f, floorStart),
+            end = Offset(w * 0.5f, floorEnd),
+            strokeWidth = 3.dp.toPx()
+        )
+
+        // Làn dẫn hướng 2 bên
+        drawLine(
+            brush = Brush.verticalGradient(
+                listOf(Color(0x6638BDF8), Color(0x1138BDF8))
+            ),
+            start = Offset(leftLaneStart, floorStart),
+            end = Offset(0f, floorEnd * 0.85f),
+            strokeWidth = 2.dp.toPx()
+        )
+        drawLine(
+            brush = Brush.verticalGradient(
+                listOf(Color(0x6638BDF8), Color(0x1138BDF8))
+            ),
+            start = Offset(rightLaneStart, floorStart),
+            end = Offset(w, floorEnd * 0.85f),
+            strokeWidth = 2.dp.toPx()
+        )
+
+        // 6. Hiệu ứng sương mờ / ánh sáng khử khuẩn phòng cấp cứu (Atmospheric Vignette)
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(Color.Transparent, Color(0x99020617)),
+                center = Offset(w * 0.5f, h * 0.45f),
+                radius = w * 0.8f
+            )
+        )
+    }
+}
 
 @Composable
 fun StartScreen(
@@ -48,6 +253,11 @@ fun StartScreen(
             .fillMaxSize()
             .background(DarkBackground)
     ) {
+        // PHÔNG NỀN KHOA CẤP CỨU (THEO PHONG CÁCH HÌNH KHOA CẤP CỨU_20261006_093905_0000.png)
+        EmergencyDepartmentBackground(
+            modifier = Modifier.fillMaxSize()
+        )
+
         // Sound toggle icon in top-right corner
         IconButton(
             onClick = onToggleSound,
@@ -70,15 +280,35 @@ fun StartScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Refined Hospital Logo - Clickable for fast action & pulse
-            HospitalLogo(
-                size = 92.dp,
+            // Biểu tượng EMS NPT Med (Logo của App từ ảnh EMS_20261006_092816_0000.png)
+            EmsAppLogo(
+                size = 110.dp,
+                showText = true,
                 onClick = {
                     if (savedShift != null) onResumeShift() else onStartNewShift()
                 }
             )
 
             Spacer(modifier = Modifier.height(18.dp))
+
+            // Bảng hiệu Khoa Cấp Cứu rực rỡ
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xDDDC2626),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                modifier = Modifier.padding(horizontal = 12.dp)
+            ) {
+                Text(
+                    text = "KHOA CẤP CỨU • EMERGENCY DEPT",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    letterSpacing = 1.5.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Main Title
             Text(
@@ -91,11 +321,11 @@ fun StartScreen(
             )
 
             Text(
-                text = "EMERGENCY DOCTOR RPG",
+                text = "HỆ THỐNG MÔ PHỎNG LÂM SÀNG CẤP CỨU",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MedicalPrimaryLight,
-                letterSpacing = 2.sp
+                letterSpacing = 1.sp
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -105,7 +335,7 @@ fun StartScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth().testTag("card_saved_shift"),
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                    colors = CardDefaults.cardColors(containerColor = DarkSurface.copy(alpha = 0.92f)),
                     border = androidx.compose.foundation.BorderStroke(1.5.dp, MedicalPrimary)
                 ) {
                     Column(
@@ -143,7 +373,7 @@ fun StartScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // NÚT XANH TEAL: TIẾP TỤC XỬ TRÍ CA NÀY
+                        // NÚT XANH: TIẾP TỤC XỬ TRÍ CA NÀY
                         Button(
                             onClick = onResumeShift,
                             modifier = Modifier
@@ -167,7 +397,7 @@ fun StartScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // NÚT MÀU XANH LÁ "BẮT ĐẦU LẠI" (YÊU CẦU 1)
+                        // NÚT MÀU XANH LÁ "BẮT ĐẦU LẠI"
                         Button(
                             onClick = onRestartCurrentCase,
                             modifier = Modifier
@@ -236,7 +466,7 @@ fun StartScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "VÀO CA TRỰC",
+                        text = "VÀO CA TRỰC CẤP CỨU",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
@@ -245,7 +475,7 @@ fun StartScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // BUTTON TO BROWSE & PICK FROM ALL 13 MEDICAL & EMERGENCY CASES
+                // BUTTON TO BROWSE & PICK CASES
                 OutlinedButton(
                     onClick = { showCaseCatalogDialog = true },
                     modifier = Modifier
@@ -277,7 +507,7 @@ fun StartScreen(
             )
         }
 
-        // CASE CATALOG DIALOG (SHOWING ALL 13 CASES: CRITICAL EMERGENCY & INTERNAL MEDICINE)
+        // CASE CATALOG DIALOG (SHOWING ALL 13 CASES)
         if (showCaseCatalogDialog) {
             Dialog(onDismissRequest = { showCaseCatalogDialog = false }) {
                 Card(
@@ -384,4 +614,3 @@ fun StartScreen(
         }
     }
 }
-
